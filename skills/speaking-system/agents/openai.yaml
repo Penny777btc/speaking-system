@@ -1,0 +1,7 @@
+interface:
+  display_name: "Speaking System"
+  short_description: "配置 ChatGPT + Obsidian 口语训练闭环"
+  default_prompt: "使用 $speaking-system 按 Penny 同款或我的参数配置 ChatGPT + Obsidian 口语系统。"
+
+policy:
+  allow_implicit_invocation: true

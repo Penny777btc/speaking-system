@@ -7,15 +7,52 @@ description: 部署和维护「口语学习系统」(ChatGPT 项目 + Obsidian �
 
 一套经过真实使用打磨的语言口语训练系统。核心闭环:**ChatGPT 项目负责内容与对话**(每日输入/口语练习/复盘/月度模考,四个触发词驱动),**Obsidian 负责资产与度量**(归档、表达库、错误库、仪表盘、路线图),**定时任务负责低频维护**(每晚归集整理、每月模考提醒)。
 
-先判断用户要做哪类操作,再跳到对应小节。动手前**必读** `references/gotchas.md`——所有已知坑和解析契约都在里面,别重新踩。
+在 ChatGPT 或 Codex 中首次调用时,把「生成可下载配置包」作为默认路径。只在用户明确要求直接写入现有 Obsidian 仓库时,才修改该仓库。
+
+先判断用户要做哪类操作,再跳到对应小节。部署、换语言或排障前完整读取 `references/gotchas.md`;判断能否复制用户体验时读取 `references/portability.md`。
 
 如果用户是替朋友咨询、或环境不允许自动化(无权限/非本机),把 `references/manual-setup-guide.md` 发给对方——那是写给人类的 15 分钟手动安装指南,不依赖任何 AI 即可完成部署。
 
 ## 操作一:全新部署
 
-先问清参数(有合理默认就别逐条问):目标语言(默认英语)、当前水平与目标(默认 B1→C1 一年)、兴趣领域(3-4 个)、Obsidian 仓库位置(优先 iCloud 容器,手机可用;见 gotchas #18)。
+先选择配置模式:
 
-1. **Obsidian 侧**:把 `assets/vault-template/English-Speaking-System` 拷入目标仓库;按用户领域改写 `00-Prompts/3-话题库` 和表达库分类小节;改 `06-Roadmap` 的起止日期与季度区间;运行 `scripts/install_plugins.sh <仓库绝对路径>` 安装 Templater+Dataview 并写好热键(Cmd+Shift+E);重启 Obsidian 并实测:仪表盘渲染、Cmd+Shift+E 出现「剪贴板归档」模板。
+- 用户说「Penny 同款」「和原作者一样」:直接使用 `--profile penny`,不要重复询问已有参数;明确说明该预设不含私人对话历史。
+- 用户要自己的版本:一次性询问目标语言、母语、当前水平、目标和 3-4 个兴趣领域;用户接受默认值时使用 `--profile generic`。
+- 用户要迁移已有学习状态:除配置模式外,接收用户明确提供的表达库和错误库,分别传给 `--expression-bank` 与 `--error-bank`。不要自行查找或打包私人历史。
+
+默认输出可下载配置包;也可在得到明确授权后直接写入用户给出的 Obsidian 仓库。
+
+### 默认:生成可下载配置包
+
+在可运行本地脚本的环境中执行:
+
+```bash
+python3 scripts/configure.py \
+  --profile "<generic|penny|自定义profile.json>" \
+  --target-language "<目标语言>" \
+  --native-language "<母语>" \
+  --level "<当前水平>" \
+  --goal "<目标>" \
+  --domains "<领域1/领域2/领域3>" \
+  --output "<可写输出目录>"
+```
+
+Penny 同款最短命令:
+
+```bash
+python3 scripts/configure.py --profile penny --output "<可写输出目录>"
+```
+
+若用户提供自定义领域,先生成一份覆盖这些领域的四季度话题库 Markdown,通过 `--topic-bank <文件>` 传入配置脚本。不要把默认 AI/商业话题库冒充成已个性化内容。
+
+把最终 ZIP 交给用户,并说明其中 `00-Prompts/4-项目指令(完整版).md` 是要复制进 ChatGPT 项目 Instructions 的内容。不要声称普通 ChatGPT 聊天能直接写入用户电脑;ChatGPT Web 无本地文件权限时,只交付配置包和导入步骤。
+
+### 可选:直接部署到本机 Obsidian
+
+用户明确给出并授权修改仓库后,先把生成目录复制到仓库根目录,再继续以下步骤。若目标目录已存在,先报告冲突;未经明确同意不得使用 `--force` 覆盖。
+
+1. **Obsidian 侧**:把生成的系统文件夹放入目标仓库;按用户领域改写表达库分类小节;改 `06-Roadmap` 的起止日期与季度区间;征得同意后运行 `scripts/install_plugins.sh <仓库绝对路径> <系统文件夹名>` 安装 Templater+Dataview 并写好热键(Cmd+Shift+E);重启 Obsidian 并实测:仪表盘渲染、Cmd+Shift+E 出现「剪贴板归档」模板。
 2. **ChatGPT 侧**:读 `references/project-instruction-template.md`,替换占位符生成项目指令;引导(或经用户同意后用 computer-use 代办)在 ChatGPT 建项目并贴入 Instructions(UI 路径见 gotchas #19,注意 Typeless 遮挡 #16、剪贴板 #17)。
 3. **自动化侧**(建议但可选,逐项征求同意):launchd 每晚 git 备份到 `~/.obsidian-backups/`;两个定时任务——每晚 22:15 归集当天日志进表达库/错误库(周日附周报)、每月 1 号模考提醒(季度节点附升级提醒)。定时任务 prompt 里必须写死仓库绝对路径,并强调查重(宁漏勿重)。
 4. **端到端验收**(不可省):在项目里发「每日输入」验证文章生成;造一段假复盘写入剪贴板,跑 Cmd+Shift+E 验证 frontmatter 解析;打开仪表盘验证渲染。验收后把测试笔记移出仓库。

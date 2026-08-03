@@ -36,7 +36,7 @@ English-Speaking-System/
     └── B1到C1路线图.md     ← 季度里程碑与每日节奏
 ```
 
-> 💾 本仓库已存放于 iCloud(手机 Obsidian 可直接打开);每晚 22:00 自动备份到本机 `~/.obsidian-backups/`(含 git 历史)。
+> 💾 如需在手机使用,把仓库放进 iCloud 的 Obsidian 文件夹。Git 备份和每晚自动整理属于可选自动化,只有在部署时明确启用后才会运行。
 
 ---
 
