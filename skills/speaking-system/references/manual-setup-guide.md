@@ -1,7 +1,7 @@
 # 手动安装指南(无需 AI 帮助,约 15 分钟)
 
-> 这份指南写给**人**看。如果你有 Claude,不用读这个——直接对它说「帮我部署口语学习系统」即可。
-> 没有 Claude 的话,照下面一步步做,同样能把系统跑起来;只是「每晚自动整理」这类自动化没有,退回每周手动整理 5 分钟(系统文档里有写怎么做)。
+> 这份指南写给需要手动部署的人。如果你已经安装 ChatGPT/Codex 插件,直接说「帮我部署口语学习系统」即可。
+> 不使用 AI 自动部署也没关系,照下面一步步做同样能跑起来;只是「每晚自动整理」等自动化会退回每周手动整理 5 分钟。
 
 ## 你需要准备
 
@@ -11,8 +11,8 @@
 ## 第一步:装入 Obsidian(5 分钟)
 
 1. 打开 Obsidian → 创建一个新仓库(或用你现有的仓库)
-2. 把本 skill 包里 `assets/vault-template/` 下的 **English-Speaking-System 整个文件夹**,拖进你仓库的根目录(在访达/资源管理器里拖即可)
-3. 回到 Obsidian,左侧应能看到 English-Speaking-System 及其子文件夹
+2. 把配置包里的 **Speaking-System 整个文件夹**拖进你仓库的根目录(在访达/资源管理器里拖即可)
+3. 回到 Obsidian,左侧应能看到 Speaking-System 及其子文件夹
 
 ## 第二步:装两个插件(5 分钟)
 
@@ -21,7 +21,7 @@
    - **Templater**(一键归档靠它)
    - **Dataview**(仪表盘靠它;装好后进它的设置,打开 **Enable JavaScript Queries**)
 3. 进 Templater 设置:
-   - Template folder location 填:`English-Speaking-System/01-Templates`
+   - Template folder location 填:`Speaking-System/01-Templates`
 4. 设置 → 快捷键 → 搜「Templater: Create new note from template」→ 绑定 `Cmd+Shift+E`(Windows 用 `Ctrl+Shift+E`)
 
 ✅ 自检:按一下快捷键,应弹出模板选择框,里面有「English Study 剪贴板归档」。

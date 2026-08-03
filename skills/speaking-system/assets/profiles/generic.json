@@ -1,0 +1,12 @@
+{
+  "id": "generic",
+  "display_name": "通用配置",
+  "target_language": "英语",
+  "native_language": "中文",
+  "level": "B1+",
+  "goal": "一年内从 B1 到 C1",
+  "domains": ["AI", "商业模式", "创业", "个人成长"],
+  "words": 250,
+  "folder_name": "Speaking-System",
+  "triggers": ["每日输入", "开始口语练习", "按模板复盘", "月度模考"]
+}
