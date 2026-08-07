@@ -37,6 +37,8 @@
 18. **手机版 Obsidian 只能打开 iCloud 容器内的仓库**:`~/Library/Mobile Documents/iCloud~md~obsidian/Documents/`。迁移=拷贝+校验+改 `~/Library/Application Support/obsidian/obsidian.json` 的 path+重启;旧目录改名保留作回退。手机首开的信号是 `.obsidian/workspace-mobile.json` 同步回来。
 19. **ChatGPT 桌面版 UI 自动化路径**:app 菜单→设置(cmd+, 不可靠);项目指令入口=项目页右上 ⋯ →「编辑指令」;保存后弹窗自动关闭即成功。粘贴后用 zoom 截图校验开头文字再保存。
 
+20. **评分漂移**:不给量表时,LLM 评分会央值黏滞(Grammar 永远 3.5)且混淆难度与能力(短而简单的闲聊反而拿高分)。修复=证据锚定评分:Grammar 绑定错误密度(错误条数÷发言分钟,量表见指令模板),Overall=四维之和÷2 纯计算,「说明」栏强制引用证据数字。注意:切换量表当天起,历史分数与新分数不可比,预期整体下移——要提前告诉用户这是测量变准了,不是退步。
+
 ## 系统设计不变量(改造时守住)
 
 - **一天 = 一个会话 = 一次复盘 = 一次归档**。任何让用户一天做两次复盘的设计都是打补丁,应重新划分会话边界。
