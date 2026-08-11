@@ -30,7 +30,7 @@ if (looksLike) {
   // 手机复制会丢失 # 标题:把开头的纯文本标题行换成正式标题,并给已知小节补 ##
   if (!/^# /m.test(body)) {
     body = body.replace(/^[^\n]*English Study[^\n]*\n?/, "");
-    const secs = ["Speaking Time","Main Topics","Strengths","Key Corrections","Error Log","New Words & Phrases","Expressions Used","明日重测清单","Model Sentence","Tomorrow's Suggestion & Topic","Tomorrow’s Suggestion & Topic","Overall Evaluation"];
+    const secs = ["Speaking Time","Main Topics","Strengths","Key Corrections","Error Log","New Words & Phrases","Expressions Used","明日重测清单","Model Sentence","Tomorrow's Suggestion & Topic","Tomorrow’s Suggestion & Topic","Overall Evaluation","Today's Input"];
     for (const h of secs) body = body.replace(new RegExp("^" + h.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$", "m"), "## " + h);
     body = "# " + dateStr + " English Study\n\n" + body;
   }
