@@ -52,6 +52,8 @@
 
 31. **GPT 写数字会带千分位逗号**("Scored word count: ~1,520"),`\d+` 解析在逗号处截断,word_count 存成 1——仪表盘上表现为「评分词数=1」而错误率却正常(错误率是 GPT 直接给的)。解析大数字一律用 `([\d,]+)` 再 strip 逗号。排查信号:word_count 与 scored_time 严重不成比例(23 分钟只有 1 词)。
 
+32. **Templater 的危险功能有「双闸」**(2026-08-12 破案,顺带解释了 #11):`enable_startup_templates` / `trigger_on_file_creation`(布尔总闸)/ `enable_system_commands` 存在**设备本地 localStorage**("templater-local-settings"),不在 data.json!data.json 里的 startup_templates / folder_templates 只是名单,总闸没开一律静默不跑。外部改配置文件永远打不开总闸——必须在 Templater 设置界面手动拨(每台设备各拨一次)。排查信号:配置字节级正确但功能完全不触发。
+
 ## 系统设计不变量(改造时守住)
 
 - **一天 = 一个会话 = 一次复盘 = 一次归档**。任何让用户一天做两次复盘的设计都是打补丁,应重新划分会话边界。
