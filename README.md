@@ -25,7 +25,7 @@
 
 ## 开始使用
 
-1. **[📥 下载本仓库](../../archive/refs/heads/main.zip)**,把 `Speaking-System` 文件夹拖进你的 Obsidian 仓库
+1. **[📥 下载本仓库](../../archive/refs/heads/main.zip)**,把 `English-Speaking-System` 文件夹拖进你的 Obsidian 仓库
 2. 照 **[docs/安装指南.md](docs/安装指南.md)** 走完剩下两步(装 2 个插件、给 ChatGPT 贴一段指令),约 15 分钟
 3. 打开 ChatGPT 语音,说「每日输入」——开始你的第一天
 
