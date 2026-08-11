@@ -1,59 +1,46 @@
-# 🎙️ Speaking System — 口语学习系统
+# 🎙️ Speaking System — 用 ChatGPT 语音 + Obsidian 练出一口英语
 
-一套「ChatGPT + Obsidian」双端闭环的语言口语训练系统。核心是一个可独立发送给 ChatGPT 或 Codex 的自包含 Skill;插件只是可选安装外壳。
+> 光练不记,等于白练。这套系统把每次开口变成可追踪的成长记录。
+> 每天 30–60 分钟,一年从 B1 到 C1。不用写代码,15 分钟装好。
 
-**每日闭环**:每日输入(领域文章+地道表达)→ Live 口语练习(旧错重测热身)→ 模板复盘(全量错误清单)→ 一键归档 Obsidian → 仪表盘可视化(打卡/评分曲线/错误类型趋势)→ 定时任务每晚自动归集表达库与错误库。
+## 它长什么样
 
-灵感来自 [Gloria 的 X 帖](https://x.com/changloria0816/status/2080893224181547481):「光练不记,等于白练」。在其基础上扩展了:B1→C1 季度爬坡路线、错误重测闭环、全语音流程、全自动归档与统计。
+每天对着 ChatGPT 语音说四句话,系统自动完成剩下的一切:
 
-## 直接发送给 ChatGPT / Codex
-
-下载 Release 中的 `speaking-system.zip`,作为附件发给 ChatGPT 或 Codex,然后发送:
-
-> 请完整读取压缩包中 `speaking-system/SKILL.md`,按照它的流程帮我部署。我要通用配置 / Penny 同款。
-
-Skill 会生成两项交付物:
-
-1. 可放进 Obsidian 的完整配置 ZIP
-2. 可复制进 ChatGPT 项目 Instructions 的个性化指令
-
-“Penny 同款”复制公开的系统参数、话题库、训练节奏和路线图,不包含私人对话历史。用户另行提供表达库和错误库时,Skill 也能把学习状态迁入新配置。
-
-## 可选:安装到 ChatGPT Work / Codex
-
-长期跨对话使用时,可以把同一个 Skill 作为插件安装。插件可用于 **ChatGPT Work(Web/桌面端)** 和 **Codex(桌面端/CLI)**。
-
-### GitHub 预览版(审核发布前)
-
-先在终端注册这个 GitHub 插件市场,再安装插件:
-
-```bash
-codex plugin marketplace add Penny777btc/speaking-system
-codex plugin add speaking-system@speaking-system
-```
-
-安装后新开一个 ChatGPT Work 或 Codex 对话,输入 **「帮我一键配置口语学习系统」**。回答目标语言、水平、目标和兴趣领域后,插件会生成一个可直接导入 Obsidian 的 zip 和 ChatGPT 项目指令。
-
-已经注册过市场时,可直接点 [安装 Speaking System](codex://plugins/install/?marketplace=speaking-system)。
-
-> 真正面向所有 ChatGPT 用户的单击安装,需要把本仓库提交并审核进入 ChatGPT/Codex 共用的通用插件目录。本仓库现已具备提交所需的插件结构;GitHub 命令是审核前的测试安装路径。
-
-## 手动安装(约 15 分钟)
-
-照着 [`skills/speaking-system/references/manual-setup-guide.md`](skills/speaking-system/references/manual-setup-guide.md) 操作:拖文件夹 → 装 2 个插件 → 把指令贴进 ChatGPT 项目。
-
-## 仓库结构
-
-| 路径 | 内容 |
+| 你说 | 它做 |
 |---|---|
-| `.codex-plugin/plugin.json` | ChatGPT/Codex 插件清单与安装页元数据 |
-| `.agents/plugins/marketplace.json` | GitHub 预览版插件市场入口 |
-| `skills/speaking-system/` | 可独立发送、安装和运行的完整 Skill |
-| `skills/speaking-system/SKILL.md` | ChatGPT/Codex 使用的部署、维护与排障工作流 |
-| `skills/speaking-system/assets/` | Obsidian 模板、通用配置与 Penny 同款配置 |
-| `skills/speaking-system/references/` | 项目指令模板、踩坑库、手动指南和可移植性边界 |
-| `skills/speaking-system/scripts/` | 配置包生成、状态导入和 Obsidian 插件配置脚本 |
+| 「每日输入」 | 按你的兴趣领域生成短文并朗读,教你 5 个地道表达,逐个陪你操练 |
+| 「开始口语练习」 | 先重测你之前犯过的错,再给你结构化的输出任务(观点陈述/角色扮演/辩论…) |
+| 「按模板复盘」 | 输出当天全部错误清单、评分(证据锚定,不凭感觉)、明天的训练目标 |
+| *(复制→Obsidian 按快捷键)* | 自动归档:评分入库、仪表盘画曲线、错误进错误库等着被你消灭 |
+
+## 使用前 vs 使用后
+
+| | ❌ 之前 | ✅ 之后 |
+|---|---|---|
+| 练完 | 对话再爽,下课就忘 | 每天沉淀一篇结构化记录 |
+| 纠错 | 今天纠正,明天照犯 | 错误进库 → 隔天热身重测 → 直到「已攻克」 |
+| 表达 | 学过就丢 | 表达进库 → 对话里自发用出 2 次才「毕业」 |
+| 进步 | 全凭感觉 | 打卡天数、每百词错误率、评分曲线,一眼可见 |
+
+## 开始使用
+
+1. **[📥 下载本仓库](../../archive/refs/heads/main.zip)**,把 `Speaking-System` 文件夹拖进你的 Obsidian 仓库
+2. 照 **[docs/安装指南.md](docs/安装指南.md)** 走完剩下两步(装 2 个插件、给 ChatGPT 贴一段指令),约 15 分钟
+3. 打开 ChatGPT 语音,说「每日输入」——开始你的第一天
+
+遇到问题先看 **[docs/常见问题.md](docs/常见问题.md)**;闪卡、发音朗读、自动整理等可选功能见 **[docs/进阶.md](docs/进阶.md)**。
+
+## 这套系统的三个设计原则
+
+1. **证据锚定评分**:Grammar 看每百词错误率、Fluency 看语速,总分是公式算的——AI 不许凭感觉打分,所以曲线可信
+2. **错误和表达都是闭环**:错误要重测通过才算攻克,表达要自发用出才算学会——没有「学过就算学会」
+3. **自动化搬运,人工朗读**:记录归档全自动,唯一留给你的动作是每天开口和大声朗读——那是唯一长肌肉的部分
+
+## 起源
+
+灵感来自 [Gloria 的这篇帖子](https://x.com/changloria0816/status/2080893224181547481),在其基础上加入了:B1→C1 季度爬坡路线、错误重测闭环、表达毕业机制、证据锚定评分、全语音流程。经过真实用户十天高强度使用打磨,踩过的 31 个坑都已修复在系统里。
 
 ## 系统要求
 
-Obsidian(免费)+ ChatGPT 账号(免费版可用)。macOS 上体验最完整;核心流程跨平台。
+Obsidian(免费)+ ChatGPT 账号(免费版可用,Plus 语音体验更好)。macOS 体验最完整,核心流程全平台可用。
