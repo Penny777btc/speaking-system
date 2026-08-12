@@ -27,23 +27,33 @@
 | 表达 | 学过就丢 | 表达进库 → 对话里自发用出 2 次才「毕业」 |
 | 进步 | 全凭感觉 | 打卡天数、每百词错误率、评分曲线,一眼可见 |
 
-## 开始使用(三选一)
+## 开始使用:先选一条路
 
-**🤖 有本地 AI Agent(Codex / Claude Code / Cursor)——约 5 分钟**
-对它说:`读取 https://raw.githubusercontent.com/Penny777btc/speaking-system/main/AGENT-SETUP.md 并严格照做,帮我完成安装`
-它会下载文件、装插件、写配置,并按你的领域和水平把 ChatGPT 指令填好放进剪贴板。
-详细说明:**[docs/自动安装.md](docs/自动安装.md)**
+### 🤖 A. 有本地 AI 助手(Codex / Claude Code / Cursor)——约 5 分钟
 
-**🖱️ 手动安装——约 15 分钟**
-[📥 下载本仓库](https://github.com/Penny777btc/speaking-system/archive/refs/heads/main.zip),照 **[docs/安装指南.md](docs/安装指南.md)** 一步步做(每步带自检点)。
+对它粘贴这句话:
 
-> 两条路装出来的东西**完全一样**。无论走哪条,最后都要自己配一次 ChatGPT 项目(2 分钟,见 [docs/配置ChatGPT项目.md](docs/配置ChatGPT项目.md))——那是云端功能,没有工具能代劳。
+```
+读取 https://raw.githubusercontent.com/Penny777btc/speaking-system/main/AGENT-SETUP.md 并严格照做,帮我完成安装
+```
 
-**装好之后**:打开 ChatGPT 语音,说「每日输入」——开始你的第一天
+它会问你 5 个问题,然后 90 秒内装完插件、写好配置、把 ChatGPT 指令按你的领域填好放进剪贴板。
 
-遇到问题先看 **[docs/常见问题.md](docs/常见问题.md)**。
+📖 **完整流程 → [docs/自动安装.md](docs/自动安装.md)**
 
-**可选加强**(见 [docs/进阶.md](docs/进阶.md)):复习闪卡与发音音频、选中任意单词朗读;有本地 AI 助手的话还能配 [每晚智能整理](docs/AI每晚自动整理.md)。
+### 🖱️ B. 没有 AI 助手——约 15 分钟
+
+[📥 下载本仓库](https://github.com/Penny777btc/speaking-system/archive/refs/heads/main.zip) → 拖文件夹进 Obsidian → 装 2 个插件 → 配 ChatGPT。每步都有自检点。
+
+📖 **完整流程 → [docs/手动安装.md](docs/手动安装.md)**
+
+---
+
+**两条路装出来的东西完全一样。** 唯一的区别是谁来下载文件、装插件、改指令参数——A 是 AI 代劳,B 是你自己点。
+
+无论走哪条,最后都要**自己配一次 ChatGPT 项目**(2 分钟,见 [docs/配置ChatGPT项目.md](docs/配置ChatGPT项目.md))——那是云端功能,没有任何工具能代劳。
+
+装好之后怎么用 → **[docs/日常流程.md](docs/日常流程.md)**;遇到问题 → [docs/常见问题.md](docs/常见问题.md)
 
 ## 这套系统的三个设计原则
 

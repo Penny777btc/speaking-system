@@ -34,6 +34,6 @@ tags:
 ## 完整文档
 
 - 📖 [日常流程](https://github.com/Penny777btc/speaking-system/blob/main/docs/日常流程.md) —— 哪些你做、哪些系统自动做
-- 🔧 [安装指南](https://github.com/Penny777btc/speaking-system/blob/main/docs/安装指南.md)
+- 🔧 [手动安装](https://github.com/Penny777btc/speaking-system/blob/main/docs/手动安装.md)
 - ❓ [常见问题](https://github.com/Penny777btc/speaking-system/blob/main/docs/常见问题.md)
 - ⚙️ [进阶功能](https://github.com/Penny777btc/speaking-system/blob/main/docs/进阶.md) —— 自动整理、复习闪卡、发音朗读
