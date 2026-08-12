@@ -94,7 +94,9 @@ tags:
 
 entry_re = re.compile(r"^- (?P<body>.+)$")
 # trailing *(2026-08-06,中文说明)* or *(2026-08-06)*
-meta_re = re.compile(r"\*\((?P<date>\d{4}-\d{2}-\d{2})(?P<extra>[^)]*)\)\*\s*$")
+# 不要求 meta 在行尾:条目末尾可能被追加使用记录(· 用过 ×2 · 上次 08-10 🎓),
+# 锚定行尾会让这些「真正用出来过的表达」反而进不了闪卡。
+meta_re = re.compile(r"\*\((?P<date>\d{4}-\d{2}-\d{2})(?P<extra>[^)]*)\)\*")
 example_re = re.compile(r"—\s*\*(?P<ex>[^*]+)\*")
 
 
@@ -140,7 +142,7 @@ def main():
         # Skip provenance tags ("每日输入") and editorial notes about the edit
         # itself -- those make fronts that cue nothing, or leak the answer.
         gloss = re.sub(r"^(当天批改|按当天批改)[：:]\s*", "", gloss)
-        gloss = re.split(r"[；;]", gloss)[0].strip()
+        gloss = re.split(r"[；;·]", gloss)[0].strip()
         if re.fullmatch(r"(每日输入|原句.*|.*已按.*改为.*)", gloss or ""):
             gloss = ""
 
