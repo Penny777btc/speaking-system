@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="用 ChatGPT 语音 + Obsidian 练英语口语的开源系统:说过的话自动变成带评分的记录,犯过的错第二天回来考你。">
+<style>*{margin:0;padding:0}img{max-width:100%}</style>
+</head>
+<body>
+<title>Speaking System — 让说过的话变成看得见的进步</title>
+<style>
+  :root{
+    --paper:#F3F4F1; --surface:#FFFFFF; --surface-2:#EDEEEA;
+    --ink:#171A18; --ink-2:#4E534E; --ink-3:#7C827C;
+    --rule:#DDE0DA; --rule-2:#C8CCC4;
+    --accent:#C0442A; --accent-soft:#F3E2DD;
+    --bad:#A33A2C; --good:#33684C;
+    --shadow:0 1px 2px rgba(23,26,24,.05), 0 8px 24px -12px rgba(23,26,24,.14);
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --cjk:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC",sans-serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,var(--cjk);
+    --rail:9.5rem; --gut:2.25rem; --max:78rem;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#131513; --surface:#1B1E1B; --surface-2:#22251F;
+      --ink:#E9EBE5; --ink-2:#A9AFA6; --ink-3:#7C837A;
+      --rule:#2C302B; --rule-2:#3B403A;
+      --accent:#E86A4B; --accent-soft:#3A231C;
+      --bad:#E07A66; --good:#6FB48E;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#131513; --surface:#1B1E1B; --surface-2:#22251F;
+    --ink:#E9EBE5; --ink-2:#A9AFA6; --ink-3:#7C837A;
+    --rule:#2C302B; --rule-2:#3B403A;
+    --accent:#E86A4B; --accent-soft:#3A231C;
+    --bad:#E07A66; --good:#6FB48E;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+  :root[data-theme="light"]{
+    --paper:#F3F4F1; --surface:#FFFFFF; --surface-2:#EDEEEA;
+    --ink:#171A18; --ink-2:#4E534E; --ink-3:#7C827C;
+    --rule:#DDE0DA; --rule-2:#C8CCC4;
+    --accent:#C0442A; --accent-soft:#F3E2DD;
+    --bad:#A33A2C; --good:#33684C;
+    --shadow:0 1px 2px rgba(23,26,24,.05), 0 8px 24px -12px rgba(23,26,24,.14);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--sans); font-size:16px; line-height:1.75;
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  .wrap{max-width:var(--max); margin:0 auto; padding:0 var(--gut)}
+
+  /* ── 账本式左栏 ───────────────────────── */
+  .band{border-top:1px solid var(--rule)}
+  .band:first-of-type{border-top:none}
+  .row{display:grid; grid-template-columns:var(--rail) minmax(0,1fr); gap:2.5rem; padding:4.5rem 0}
+  .rail{font-family:var(--mono); font-size:.6875rem; letter-spacing:.14em; text-transform:uppercase;
+        color:var(--ink-3); padding-top:.5rem; line-height:1.6}
+  .rail b{display:block; color:var(--accent); font-weight:600}
+  .col{min-width:0}
+  @media(max-width:820px){
+    .row{grid-template-columns:1fr; gap:1.25rem; padding:3rem 0}
+    .rail{padding-top:0}
+    :root{--gut:1.25rem}
+  }
+
+  h1,h2,h3{text-wrap:balance; margin:0}
+  h1{font-size:clamp(2.1rem,5.4vw,3.7rem); line-height:1.14; letter-spacing:-.022em; font-weight:700}
+  h2{font-size:clamp(1.5rem,2.9vw,2.05rem); line-height:1.25; letter-spacing:-.015em; font-weight:700; margin-bottom:.9rem}
+  h3{font-size:1.0625rem; font-weight:650; letter-spacing:-.005em; margin-bottom:.4rem}
+  p{margin:0 0 1rem; max-width:40rem}
+  .lede{font-size:1.125rem; color:var(--ink-2); max-width:38rem}
+  .fine{font-size:.875rem; color:var(--ink-3); line-height:1.7}
+  strong{font-weight:650}
+  a{color:var(--accent); text-decoration:none; border-bottom:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+  a:hover{border-bottom-color:var(--accent)}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:2px}
+  code,.m{font-family:var(--mono); font-size:.9em; font-variant-numeric:tabular-nums}
+  code{background:var(--surface-2); padding:.12em .38em; border-radius:3px}
+
+  /* ── Hero ─────────────────────────────── */
+  .hero{padding:5rem 0 4rem}
+  .eyebrow{font-family:var(--mono); font-size:.6875rem; letter-spacing:.2em; text-transform:uppercase;
+           color:var(--accent); margin-bottom:1.4rem; display:flex; align-items:center; gap:.6rem}
+  .eyebrow::before{content:""; width:1.6rem; height:1px; background:var(--accent)}
+  .hero h1{max-width:19ch}
+  .hero .lede{margin-top:1.4rem; font-size:1.1875rem}
+  .cta{display:flex; flex-wrap:wrap; gap:.7rem; margin-top:2.2rem}
+  .btn{display:inline-block; font-family:var(--mono); font-size:.8125rem; letter-spacing:.03em;
+       padding:.72rem 1.15rem; border-radius:4px; border:1px solid var(--accent);
+       background:var(--accent); color:var(--paper); border-bottom-color:var(--accent);
+       transition:transform .16s ease, opacity .16s ease}
+  .btn:hover{opacity:.9; transform:translateY(-1px)}
+  .btn.ghost{background:transparent; color:var(--accent)}
+  .btn.ghost:hover{background:var(--accent-soft)}
+
+  /* ── 转录条:hero 的论点 ───────────────── */
+  .strip{margin-top:3.2rem; border:1px solid var(--rule); border-radius:6px;
+         background:var(--surface); box-shadow:var(--shadow); overflow:hidden}
+  .strip-hd{display:flex; align-items:center; gap:.55rem; padding:.6rem .95rem;
+            border-bottom:1px solid var(--rule); background:var(--surface-2);
+            font-family:var(--mono); font-size:.6875rem; letter-spacing:.1em;
+            text-transform:uppercase; color:var(--ink-3)}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
+  .strip-body{display:grid; grid-template-columns:repeat(3,1fr)}
+  .cell{padding:1.35rem 1.15rem; border-right:1px solid var(--rule); min-width:0}
+  .cell:last-child{border-right:none}
+  .cell .lbl{font-family:var(--mono); font-size:.625rem; letter-spacing:.13em; text-transform:uppercase;
+             color:var(--ink-3); margin-bottom:.6rem}
+  .say{font-family:var(--mono); font-size:.9375rem; line-height:1.6}
+  .say .x{color:var(--bad)}
+  .say .v{color:var(--good)}
+  .arrow{color:var(--ink-3); margin:0 .3rem}
+  @media(max-width:700px){
+    .strip-body{grid-template-columns:1fr}
+    .cell{border-right:none; border-bottom:1px solid var(--rule)}
+    .cell:last-child{border-bottom:none}
+  }
+
+  /* ── 前后对比 ─────────────────────────── */
+  .vs{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--rule);
+      border:1px solid var(--rule); border-radius:6px; overflow:hidden; margin-top:.5rem}
+  .vs>div{background:var(--surface); padding:1.5rem 1.35rem}
+  .vs .tag{font-family:var(--mono); font-size:.6875rem; letter-spacing:.12em; text-transform:uppercase;
+           margin-bottom:1rem; color:var(--ink-3)}
+  .vs .after .tag{color:var(--accent)}
+  .vs ul{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:.7rem}
+  .vs li{font-size:.9375rem; line-height:1.6; padding-left:1.1rem; position:relative; color:var(--ink-2)}
+  .vs li::before{content:"—"; position:absolute; left:0; color:var(--ink-3); font-family:var(--mono)}
+  .vs .after li{color:var(--ink)}
+  .vs .after li::before{content:"+"; color:var(--accent)}
+  @media(max-width:700px){.vs{grid-template-columns:1fr}}
+
+  /* ── 步骤 ─────────────────────────────── */
+  .steps{display:flex; flex-direction:column; gap:1px; background:var(--rule);
+         border:1px solid var(--rule); border-radius:6px; overflow:hidden}
+  .step{background:var(--surface); padding:1.4rem 1.35rem; display:grid;
+        grid-template-columns:2.4rem minmax(0,1fr); gap:1.1rem; align-items:start}
+  .num{font-family:var(--mono); font-size:.8125rem; color:var(--accent); font-weight:600;
+       padding-top:.15rem; font-variant-numeric:tabular-nums}
+  .step .said{display:inline-block; font-family:var(--mono); font-size:.875rem;
+              background:var(--accent-soft); color:var(--accent); padding:.15rem .5rem;
+              border-radius:3px; margin-bottom:.45rem}
+  .step p{margin:0; font-size:.9375rem; color:var(--ink-2); line-height:1.65}
+  .step .auto{margin-top:.6rem; padding-top:.6rem; border-top:1px dashed var(--rule-2);
+              font-size:.875rem; color:var(--ink-3)}
+  .step .auto b{color:var(--ink-2); font-weight:600}
+
+  /* ── 卡片网格 ─────────────────────────── */
+  .grid{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1px;
+        background:var(--rule); border:1px solid var(--rule); border-radius:6px; overflow:hidden}
+  @media(max-width:1000px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--surface); padding:1.4rem 1.3rem}
+  .card .k{font-family:var(--mono); font-size:.625rem; letter-spacing:.13em; text-transform:uppercase;
+           color:var(--accent); margin-bottom:.7rem}
+  .card p{margin:0; font-size:.9063rem; color:var(--ink-2); line-height:1.65}
+
+  /* ── 错误的一生 ───────────────────────── */
+  .life{position:relative; margin-top:.5rem; padding-left:1.5rem}
+  .life::before{content:""; position:absolute; left:4px; top:.6rem; bottom:.6rem;
+                width:1px; background:var(--rule-2)}
+  .beat{position:relative; padding:0 0 1.6rem}
+  .beat:last-child{padding-bottom:0}
+  .beat::before{content:""; position:absolute; left:-1.5rem; top:.55rem; width:9px; height:9px;
+                border-radius:50%; background:var(--paper); border:1.5px solid var(--rule-2)}
+  .beat.hit::before{background:var(--accent); border-color:var(--accent)}
+  .beat .when{font-family:var(--mono); font-size:.6875rem; letter-spacing:.1em; text-transform:uppercase;
+              color:var(--ink-3); margin-bottom:.25rem}
+  .beat .what{font-size:.9375rem; line-height:1.65; color:var(--ink-2)}
+  .beat .what b{color:var(--ink); font-weight:600}
+  .beat .q{font-family:var(--mono); font-size:.875rem; color:var(--ink); margin-top:.35rem}
+  .beat .q .x{color:var(--bad)} .beat .q .v{color:var(--good)}
+  @media(prefers-reduced-motion:reduce){ .btn{transition:none} }
+
+  /* ── 表格 ─────────────────────────────── */
+  .tw{overflow-x:auto; border:1px solid var(--rule); border-radius:6px; background:var(--surface)}
+  table{border-collapse:collapse; width:100%; min-width:34rem; font-size:.9063rem}
+  th,td{text-align:left; padding:.78rem 1rem; border-bottom:1px solid var(--rule); vertical-align:top}
+  thead th{font-family:var(--mono); font-size:.6875rem; letter-spacing:.1em; text-transform:uppercase;
+           color:var(--ink-3); font-weight:500; background:var(--surface-2)}
+  tbody tr:last-child td{border-bottom:none}
+  td:first-child{color:var(--ink); font-weight:550}
+  td{color:var(--ink-2)}
+  .yes{color:var(--accent); font-weight:600}
+  .self{color:var(--ink); font-weight:600}
+
+  /* ── 双路径 ───────────────────────────── */
+  .paths{display:grid; grid-template-columns:1fr 1fr; gap:1.1rem}
+  .path{border:1px solid var(--rule); border-radius:6px; background:var(--surface); padding:1.5rem 1.35rem}
+  .path.lead{border-color:var(--accent)}
+  .path .top{display:flex; align-items:baseline; justify-content:space-between; gap:1rem; margin-bottom:.9rem}
+  .path .who{font-size:1.0625rem; font-weight:650}
+  .path .time{font-family:var(--mono); font-size:.75rem; color:var(--ink-3); white-space:nowrap}
+  .path p{font-size:.9063rem; color:var(--ink-2); margin-bottom:.9rem}
+  .snip{font-family:var(--mono); font-size:.78rem; line-height:1.6; background:var(--surface-2);
+        border:1px solid var(--rule); border-radius:4px; padding:.7rem .8rem; overflow-x:auto;
+        white-space:pre-wrap; word-break:break-all; color:var(--ink-2); margin-bottom:.9rem}
+  @media(max-width:700px){.paths{grid-template-columns:1fr}}
+
+  /* ── 诚实成本 ─────────────────────────── */
+  .cost{display:grid; grid-template-columns:repeat(auto-fit,minmax(13rem,1fr)); gap:1.1rem}
+  .cost>div{border-left:2px solid var(--rule-2); padding:.1rem 0 .1rem 1rem}
+  .cost .n{font-family:var(--mono); font-size:1.375rem; font-weight:600; letter-spacing:-.01em;
+           font-variant-numeric:tabular-nums; display:block; margin-bottom:.2rem}
+  .cost .d{font-size:.875rem; color:var(--ink-3); line-height:1.6}
+
+  /* ── FAQ ──────────────────────────────── */
+  details{border-bottom:1px solid var(--rule)}
+  details summary{cursor:pointer; padding:1rem 0; font-weight:600; font-size:.9688rem;
+                  list-style:none; display:flex; gap:.7rem; align-items:baseline}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"+"; font-family:var(--mono); color:var(--accent); flex:none}
+  details[open] summary::before{content:"−"}
+  details p{font-size:.9063rem; color:var(--ink-2); padding:0 0 1rem 1.4rem; margin:0}
+
+  footer{border-top:1px solid var(--rule); padding:2.6rem 0 3.4rem}
+  footer p{font-size:.875rem; color:var(--ink-3); max-width:44rem}
+</style>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="eyebrow">开源 · 免费 · ChatGPT + Obsidian</div>
+    <h1>光练不记,<br>等于白练。</h1>
+    <p class="lede">
+      每天对着 ChatGPT 说 40 分钟英语,说完就散了——错的还会再错,学的表达从没用出来过。
+      这套系统把你说过的每一句话变成可以查、可以测、可以看见曲线的记录。
+      <strong>你只负责开口,剩下的它来记。</strong>
+    </p>
+    <div class="cta">
+      <a class="btn" href="https://github.com/Penny777btc/speaking-system">下载系统 · GitHub</a>
+      <a class="btn ghost" href="#install">看看怎么装</a>
+    </div>
+
+    <div class="strip">
+      <div class="strip-hd"><span class="dot"></span>一句说错的话,会经过这三步</div>
+      <div class="strip-body">
+        <div class="cell">
+          <div class="lbl">你说</div>
+          <div class="say"><span class="x">It depends to the market.</span></div>
+        </div>
+        <div class="cell">
+          <div class="lbl">当天入库</div>
+          <div class="say"><span class="x">depend to</span><span class="arrow">→</span><span class="v">depend on</span></div>
+        </div>
+        <div class="cell">
+          <div class="lbl">第二天热身</div>
+          <div class="say">「用 depend 说一句<br>关于市场的话」</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 前后对比 -->
+  <section class="band"><div class="row">
+    <div class="rail"><b>差别</b>使用前 / 使用后</div>
+    <div class="col">
+      <h2>同样练 40 分钟,差在哪</h2>
+      <p class="lede" style="margin-bottom:1.6rem">不是练得更久,是练过的东西留了下来。</p>
+      <div class="vs">
+        <div>
+          <div class="tag">使用前</div>
+          <ul>
+            <li>聊完就结束,说错的话没人记</li>
+            <li>同一个介词错法,一个月犯了六次</li>
+            <li>学过的表达躺在笔记里,从没在嘴里出现过</li>
+            <li>"我到底有没有进步"——只能凭感觉</li>
+            <li>每天纠结"今天聊什么"</li>
+          </ul>
+        </div>
+        <div class="after">
+          <div class="tag">使用后</div>
+          <ul>
+            <li>每次练习自动存成一篇带评分的记录</li>
+            <li>犯过的错第二天回来考你,连对两次才算攻克</li>
+            <li>学的表达进任务卡,自发用出两次才「毕业」</li>
+            <li>仪表盘上是打卡天数、每百词错误率、四维评分曲线</li>
+            <li>题目按星期自动轮换,不用想</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div></section>
+
+  <!-- 每天四个动作 -->
+  <section class="band"><div class="row">
+    <div class="rail"><b>日常</b>每天 4 个动作<br>约 60 分钟</div>
+    <div class="col">
+      <h2>你要做的只有四件事</h2>
+      <p class="lede" style="margin-bottom:1.6rem">三句话,加一次复制粘贴。其余全是系统在跑。</p>
+      <div class="steps">
+        <div class="step">
+          <div class="num">01</div>
+          <div>
+            <span class="said">「每日输入」</span>
+            <p>它按你的兴趣领域写一篇短文,放慢语速念给你听,教 5 个地道表达,然后<strong>逐个</strong>让你造句、当场判对错。</p>
+            <div class="auto"><b>你练到:</b>听力 + 新表达当场用出来,不是记在本子上</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">02</div>
+          <div>
+            <span class="said">「开始口语练习」</span>
+            <p>先重测你昨天犯的错和学的表达,再发今日任务卡,然后出当天的输出题——周一观点陈述、周四辩论、周日本周串讲,按星期自动轮换。</p>
+            <div class="auto"><b>你练到:</b>复习和新内容咬在一起,不用自己安排进度</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">03</div>
+          <div>
+            <span class="said">「按模板复盘」</span>
+            <p>退出语音、打字发这五个字。它重读你今天说的所有话,按固定模板输出评分、全量错误清单、新表达、明日重测队列。</p>
+            <div class="auto"><b>关键:</b>每项评分必须引用证据数字,不能凭感觉打分</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">04</div>
+          <div>
+            <span class="said">复制 → 按快捷键</span>
+            <p>点复制,切到 Obsidian,按一下 <code>Cmd+Shift+E</code>,回车。</p>
+            <div class="auto"><b>然后自动:</b>按练习当天日期归档 · 评分和词数存进笔记属性 · 打卡天数、评分曲线、错误率趋势、错误类型统计全部刷新</div>
+          </div>
+        </div>
+      </div>
+      <p class="fine" style="margin-top:1.1rem">
+        第 4 步那次「复制」消不掉——ChatGPT 不开放对话导出接口,剪贴板是唯一出口。我们没打算假装它不存在。
+      </p>
+    </div>
+  </div></section>
+
+  <!-- 一个错误的一生(冒险节) -->
+  <section class="band"><div class="row">
+    <div class="rail"><b>内核</b>错误闭环</div>
+    <div class="col">
+      <h2>一个错误的一生</h2>
+      <p class="lede" style="margin-bottom:1.8rem">
+        大多数学习工具记下错误就结束了。这套系统的核心是:<strong>记下来只是开始</strong>。
+      </p>
+      <div class="life">
+        <div class="beat hit">
+          <div class="when">第 1 天 · 说错</div>
+          <div class="what">你在聊市场时脱口而出——</div>
+          <div class="q"><span class="x">It depends to the market.</span></div>
+        </div>
+        <div class="beat">
+          <div class="when">第 1 天 · 当晚入库</div>
+          <div class="what">复盘把它写进错误库,归类到「介词」。<b>你什么都不用做</b>,归档时自动完成。</div>
+          <div class="q"><span class="x">depend to</span> <span style="color:var(--ink-3)">→</span> <span class="v">depend on</span></div>
+        </div>
+        <div class="beat">
+          <div class="when">第 2 天 · 热身重测</div>
+          <div class="what">练习一开始,它不会直接给你英文让你跟读——而是给中文情境,<b>逼你自己产出</b>:</div>
+          <div class="q">「用 depend 说一句关于市场的话」</div>
+        </div>
+        <div class="beat">
+          <div class="when">第 5 天 · 又犯了</div>
+          <div class="what">同一个错再次出现。系统不会重复记一条,而是在原条目上标 <b>🔥 高频重犯</b>,并把它提到错误库顶部。这一次,Grammar 分会因为重犯额外扣分。</div>
+        </div>
+        <div class="beat hit">
+          <div class="when">第 9 天 · 攻克</div>
+          <div class="what">连续两次重测说对,它告诉你 <b>"已攻克"</b>,这条错误退出重测队列——腾出位置给新的。</div>
+        </div>
+      </div>
+      <p class="fine" style="margin-top:1.6rem">
+        表达走的是同一套闭环:学过的表达进「任务卡」,要求你在对话里<strong>自发</strong>用出来,累计两次才标上 🎓 毕业。
+        因为「学了用不上」才是口语学习真正的死因。
+      </p>
+    </div>
+  </div></section>
+
+  <!-- 系统给你什么 -->
+  <section class="band"><div class="row">
+    <div class="rail"><b>产出</b>装在你自己的<br>Obsidian 里</div>
+    <div class="col">
+      <h2>它会给你四样东西</h2>
+      <p class="lede" style="margin-bottom:1.6rem">全部是本地 Markdown 文件。你的数据在你自己电脑上,不在任何人的服务器。</p>
+      <div class="grid">
+        <div class="card">
+          <div class="k">Dashboard</div>
+          <h3>进度仪表盘</h3>
+          <p>连续打卡天数、四维评分曲线、每百词错误率趋势、错误类型 Top 分布。看趋势,不看单日分数。</p>
+        </div>
+        <div class="card">
+          <div class="k">Expressions</div>
+          <h3>表达库</h3>
+          <p>学过的表达按领域归类,记录你自发用出的次数和最近一次日期,满两次标记「毕业」。</p>
+        </div>
+        <div class="card">
+          <div class="k">Errors</div>
+          <h3>错误库</h3>
+          <p>按类型归档的 <span class="m" style="color:var(--bad)">✗</span><span style="color:var(--ink-3)"> → </span><span class="m" style="color:var(--good)">✓</span> 清单,重犯的自动升到顶部「高频重犯」区,每周朗读一遍。</p>
+        </div>
+        <div class="card">
+          <div class="k">Flashcards</div>
+          <h3>复习闪卡</h3>
+          <p>每次打开 Obsidian 自动重建,保留你已有的复习进度。零配置,不需要定时任务。</p>
+        </div>
+      </div>
+    </div>
+  </div></section>
+
+  <!-- 安装 -->
+  <section class="band" id="install"><div class="row">
+    <div class="rail"><b>安装</b>先选一条路</div>
+    <div class="col">
+      <h2>两条路,装出来的东西完全一样</h2>
+      <p class="lede" style="margin-bottom:1.6rem">区别只是谁来下载文件、装插件、改参数。</p>
+      <div class="paths">
+        <div class="path lead">
+          <div class="top"><span class="who">有本地 AI 助手</span><span class="time">约 5 分钟</span></div>
+          <p>Codex、Claude Code、Cursor 都行。对它粘贴这句话:</p>
+          <div class="snip">读取 https://raw.githubusercontent.com/Penny777btc/speaking-system/main/AGENT-SETUP.md 并严格照做,帮我完成安装</div>
+          <p style="margin-bottom:0">它问你 5 个问题,然后 90 秒内装完插件、写好配置、把 ChatGPT 指令按你的领域填好放进剪贴板。</p>
+        </div>
+        <div class="path">
+          <div class="top"><span class="who">没有 AI 助手</span><span class="time">约 15 分钟</span></div>
+          <p>下载仓库 → 把文件夹拖进 Obsidian → 在插件市场装 2 个插件 → 配 ChatGPT。</p>
+          <p style="margin-bottom:0">每一步都有自检点,照做就行。<a href="https://github.com/Penny777btc/speaking-system/blob/main/docs/%E6%89%8B%E5%8A%A8%E5%AE%89%E8%A3%85.md">看手动安装文档 →</a></p>
+        </div>
+      </div>
+
+      <div class="tw" style="margin-top:1.6rem">
+        <table>
+          <thead><tr><th>环节</th><th>有 AI 助手</th><th>手动</th></tr></thead>
+          <tbody>
+            <tr><td>下载、解压、放文件</td><td class="yes">AI 干</td><td>你干</td></tr>
+            <tr><td>装两个插件</td><td class="yes">AI 直接放进插件文件夹</td><td>你去插件市场搜</td></tr>
+            <tr><td>关闭「安全模式」</td><td class="yes">不需要</td><td>需要</td></tr>
+            <tr><td>把指令改成你的领域和水平</td><td class="yes">AI 按你的回答填好</td><td>你自己改三处</td></tr>
+            <tr><td>打开「自动整理」开关</td><td class="self">都要你自己点</td><td class="self">都要你自己点</td></tr>
+            <tr><td>建 ChatGPT 项目、粘贴指令</td><td class="self">都要你自己做</td><td class="self">都要你自己做</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="fine" style="margin-top:1.1rem">
+        最后两行是重点,而且都有原因:Obsidian 把「自动执行模板」这类开关存在<strong>设备本地</strong>,是防止恶意模板自动跑代码的安全设计;
+        ChatGPT 的项目是云端功能、<strong>没有公开 API</strong>,任何工具都代劳不了。这两个限制保护的正是你。
+      </p>
+    </div>
+  </div></section>
+
+  <!-- 诚实成本 -->
+  <section class="band"><div class="row">
+    <div class="rail"><b>成本</b>先算清楚<br>再决定</div>
+    <div class="col">
+      <h2>它要花你什么</h2>
+      <p class="lede" style="margin-bottom:1.8rem">这套系统不神奇,它只是把你已经在花的时间变得有复利。下面是真实开销。</p>
+      <div class="cost">
+        <div>
+          <span class="n">60 分钟</span>
+          <span class="d">每天。其中你至少要开口说 25 分钟——这是唯一无法替代的部分。</span>
+        </div>
+        <div>
+          <span class="n">15 分钟</span>
+          <span class="d">一次性安装。往后每天只有一次复制粘贴。</span>
+        </div>
+        <div>
+          <span class="n">5 分钟</span>
+          <span class="d">每周。手动归类 + <strong>大声朗读错误库</strong>——这一步故意不自动化,自动化它等于请人替你健身。</span>
+        </div>
+        <div>
+          <span class="n">¥0</span>
+          <span class="d">系统本身免费开源。ChatGPT 免费版可用,Plus 的语音体验更好。</span>
+        </div>
+      </div>
+    </div>
+  </div></section>
+
+  <!-- FAQ -->
+  <section class="band"><div class="row">
+    <div class="rail"><b>疑问</b>常被问到的</div>
+    <div class="col">
+      <h2>你可能想问</h2>
+      <details>
+        <summary>我英语很差,能用吗?</summary>
+        <p>系统按 CEFR 水平参数调难度,默认 B1+(能日常交流但不流利)。A2 也能用,把参数改一下就行。它的设计目标是一年 B1→C1,每季度模考通过后手动升一级。</p>
+      </details>
+      <details>
+        <summary>为什么用 Obsidian,不做成一个 App?</summary>
+        <p>因为你的学习数据应该是你的。全部是本地 Markdown 文件,可以随时用任何编辑器打开、备份、迁移。哪天你不用这套系统了,记录还在。</p>
+      </details>
+      <details>
+        <summary>一定要用语音吗?打字练不行?</summary>
+        <p>可以打字,但会失去大半价值。这套系统测的是口语——语速、连续输出时长、真实口误。打字练出来的是写作能力。</p>
+      </details>
+      <details>
+        <summary>评分会不会忽高忽低?</summary>
+        <p>这正是我们花最多力气修的地方。所有评分都绑定证据数字:Grammar 绑每百词错误率(不是每分钟——否则说快了会无故掉分),Fluency 绑 wpm,总分是加权公式直接算出来的,不是感觉。说明栏必须引用具体数字。</p>
+      </details>
+      <details>
+        <summary>我在中国大陆,上不了 GitHub 怎么办?</summary>
+        <p>有一个离线完整包,插件、文档、指令全在里面,解压即用,不需要访问任何外部网站。找分享给你的人要,或者看仓库里的「分享给大陆用户」文档。另外提醒:大陆用户请走手动安装,自动安装需要从 GitHub 下载插件。</p>
+      </details>
+      <details>
+        <summary>可以用来练日语、西班牙语吗?</summary>
+        <p>可以。指令是参数化的,把目标语言换掉即可,评分维度不用改。仓库里有换语言用的指令模板。</p>
+      </details>
+    </div>
+  </div></section>
+
+  <!-- 结尾 CTA -->
+  <section class="band"><div class="row">
+    <div class="rail"><b>开始</b></div>
+    <div class="col">
+      <h2>今天就能开始第一天</h2>
+      <p class="lede">装好之后先跑一遍三分钟验收,用测试数据确认整条链路通了,再开口练第一次。</p>
+      <div class="cta">
+        <a class="btn" href="https://github.com/Penny777btc/speaking-system">去 GitHub 下载</a>
+        <a class="btn ghost" href="https://github.com/Penny777btc/speaking-system/blob/main/docs/%E6%97%A5%E5%B8%B8%E6%B5%81%E7%A8%8B.md">先看看日常怎么用</a>
+      </div>
+    </div>
+  </div></section>
+
+  <footer>
+    <p>
+      灵感来自 Gloria 在 X 上分享的「GPT Live + Obsidian」方法。
+      在其基础上加了 B1→C1 的季度爬坡路线、错误重测闭环、表达毕业机制,以及一套证据锚定的评分体系。
+      经真实用户连续多日高强度使用打磨而成。免费开源。
+    </p>
+  </footer>
+</div>
+
+<button id="tt" aria-label="切换深色/浅色" title="切换深色/浅色">◐</button>
+<style>
+#tt{position:fixed;right:1rem;bottom:1rem;width:2.5rem;height:2.5rem;border-radius:50%;
+ border:1px solid var(--rule);background:var(--surface);color:var(--ink-2);
+ font-size:1rem;cursor:pointer;box-shadow:var(--shadow);z-index:99;line-height:1}
+#tt:hover{color:var(--accent);border-color:var(--accent)}
+@media print{#tt{display:none}}
+</style>
+<script>
+(function(){
+  var r=document.documentElement, k='speaksys-theme', s=localStorage.getItem(k);
+  if(s) r.setAttribute('data-theme',s);
+  document.getElementById('tt').addEventListener('click',function(){
+    var cur=r.getAttribute('data-theme');
+    if(!cur) cur=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+    var next=cur==='dark'?'light':'dark';
+    r.setAttribute('data-theme',next); localStorage.setItem(k,next);
+  });
+})();
+</script>
+</body>
+</html>
