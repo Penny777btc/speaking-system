@@ -28,12 +28,18 @@ agent 会向你确认仓库路径并在每个动作前请求批准。
 3. 全程只写用户目录,不需要也不允许 sudo。
 4. 含中文、空格或括号的路径全部加引号。
 
-## 第 0 步:问用户四个问题
+## 第 0 步:问用户五个问题
 
 1. **Obsidian 仓库(vault)的绝对路径**。用户不清楚时这样引导:打开 Obsidian → 左下角仓库名 → 鼠标悬停可见路径;或者由你为 TA 新建一个空文件夹当作新仓库(之后在 Obsidian 里 Open folder as vault)。
 2. **想练哪些领域?**(3–4 个,用于每天生成文章的选题轮换)。举例:AI、商业模式、创业、个人成长 / 医学、科研、职场沟通 / 旅行、美食、影视。用户没想法就用默认值。
 3. **当前英语水平?** 给 CEFR 等级(A2 / B1 / B1+ / B2 / B2+)。不确定就用 B1+,以后每季度自己升级。
 4. 是否顺便安装**可选**的复习闪卡插件 Spaced Repetition(默认不装,核心流程不依赖它)。
+5. **是否配置「每晚 AI 自动整理」**(见第 5 步)。问的时候要说清楚这是什么:
+   > 「我可以再配一个定时任务:每晚自动把你当天练到的表达和错误归类进库、重建复习闪卡、跑一遍数据体检。
+   > 它会**定期在后台调用 AI**(消耗你的额度),所以要你明确同意。不配也完全能用——只是这些整理要你每周花 5 分钟手动做。
+   > 现在配 / 以后再说?」
+
+   默认**不配**,用户明确说要才做。
 
 第 2、3 项你会在第 6 步用来**替用户把指令填好**——不要让用户自己去改一段 6000 字的文本。
 
@@ -47,6 +53,8 @@ rm -rf /tmp/sps && mkdir -p /tmp/sps
 ditto -x -k /tmp/sps.zip /tmp/sps 2>/dev/null || python3 -m zipfile -e /tmp/sps.zip /tmp/sps
 # 存在性护栏
 [ -e "$VAULT/English-Speaking-System" ] && echo "已存在,停止并询问用户" || cp -R /tmp/sps/speaking-system-main/English-Speaking-System "$VAULT/"
+# 顺便把仓库本体留一份在用户目录:闪卡脚本和(可选的)夜间任务都要用它,/tmp 会被系统清理
+rm -rf "$HOME/speaking-system" && cp -R /tmp/sps/speaking-system-main "$HOME/speaking-system" && echo "仓库副本: $HOME/speaking-system"
 ```
 ✅ 自检:`ls "$VAULT/English-Speaking-System"` 应包含 00-Prompts、01-Templates、02-Daily-Logs、03-Expression-Bank、04-Error-Patterns、05-Dashboard、06-Roadmap、07-Review、README.md。
 
@@ -119,7 +127,66 @@ open -a Obsidian
 ```
 征得用户同意后再重启;用户正在编辑时先提醒保存。
 
-## 第 5 步:验收(文件级由你做,界面级引导用户做)
+## 第 5 步:配置每晚自动整理(**仅当用户在第 0 步明确同意**)
+
+用户说不要就跳过这一步,直接进第 6 步。
+
+### 先取任务提示词
+
+从 `https://raw.githubusercontent.com/Penny777btc/speaking-system/main/docs/AI每晚自动整理.md` 抓取,取「任务提示词」代码块里的全文,把 `{{VAULT}}` 换成用户的仓库路径、`{{REPO}}` 换成你解压系统文件的目录(`/tmp/sps/speaking-system-main`,建议先把它拷到用户目录下持久保存,比如 `~/speaking-system`,否则 /tmp 会被清理)。
+
+### 再按你自己的类型选调度方式
+
+**如果你是 Claude Code**(或任何自带定时任务能力的 agent):用你自己的调度机制创建任务,时间设 22:15,内容就是上面那段提示词。
+
+**如果你是 Codex / Cursor 等无调度器的 CLI agent**:用 macOS 的 launchd(比 cron 可靠,不需要额外的磁盘访问授权)。
+
+```bash
+mkdir -p "$HOME/speaking-system"   # 提示词和脚本的持久位置
+cat > "$HOME/speaking-system/nightly-prompt.txt" <<'PROMPT'
+<把替换好占位符的任务提示词整段写在这里>
+PROMPT
+
+CODEX=/Applications/ChatGPT.app/Contents/Resources/codex   # 按实际路径调整
+cat > "$HOME/speaking-system/nightly.sh" <<EOF
+#!/bin/bash
+"$CODEX" exec --approve-for-me --skip-git-repo-check \
+  -c 'sandbox_workspace_write.network_access=true' \
+  "\$(cat "$HOME/speaking-system/nightly-prompt.txt")" \
+  >> "$HOME/speaking-system/nightly.log" 2>&1
+EOF
+chmod +x "$HOME/speaking-system/nightly.sh"
+
+cat > "$HOME/Library/LaunchAgents/com.speakingsystem.nightly.plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.speakingsystem.nightly</string>
+  <key>ProgramArguments</key>
+  <array><string>/bin/bash</string><string>$HOME/speaking-system/nightly.sh</string></array>
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>22</integer><key>Minute</key><integer>15</integer></dict>
+  <key>RunAtLoad</key><false/>
+</dict></plist>
+EOF
+launchctl unload "$HOME/Library/LaunchAgents/com.speakingsystem.nightly.plist" 2>/dev/null
+launchctl load "$HOME/Library/LaunchAgents/com.speakingsystem.nightly.plist" && echo "定时任务已装载"
+```
+
+**其他系统**:用 cron 或任务计划程序,原理相同——定时把提示词喂给 agent。
+
+### ✅ 自检并告诉用户怎么退出
+
+- 确认 `launchctl list | grep speakingsystem` 有输出(或你自己的任务列表里能看到)
+- **必须告诉用户卸载方法**(写进第 7 步交接里):
+  `launchctl unload ~/Library/LaunchAgents/com.speakingsystem.nightly.plist && rm ~/Library/LaunchAgents/com.speakingsystem.nightly.plist`
+- 提醒用户:今晚第一次运行时,你的 agent 可能会请求权限;第一次通过后就静默了
+
+### ⚠️ 配了这个就不要再让用户开启动脚本
+
+两者互斥:启动脚本会先把新表达搬进「📥 待归类」区,AI 晚上读日志时发现"已存在"就跳过了,结果表达永远卡在待归类、拿不到智能分类和使用统计。第 7 步交接话术里**不要再提「打开 Enable startup templates」**。
+
+## 第 6 步:验收(文件级由你做,界面级引导用户做)
 你自己验证:
 - `$VAULT/English-Speaking-System/01-Templates/English Study 剪贴板归档.md` 存在
 - community-plugins.json 含两个插件 id;两个 data.json 键正确
@@ -127,7 +194,7 @@ open -a Obsidian
 1. 按 `Cmd+Shift+E`(Windows `Ctrl+Shift+E`):应弹出模板选择框,里面有「English Study 剪贴板归档」→ 按 Esc 关闭
 2. 打开 `05-Dashboard/进度仪表盘.md`:应渲染出表格而非代码块(说明 Dataview 已生效)
 
-## 第 6 步:交接(把这段话连同指令一起交给用户)
+## 第 7 步:交接(把这段话连同指令一起交给用户)
 **先按第 0 步收集的参数把指令个性化**,再放进剪贴板。把下面的 `DOMAINS`(顿号分隔)、`DOMAINS_SLASH`(斜杠分隔)、`LEVEL` 换成用户的答案:
 
 ```bash
@@ -165,6 +232,11 @@ open "https://chatgpt.com/projects" 2>/dev/null \
 > 注意:你**只能把页面打开给用户**。创建项目、粘贴指令、保存这三步必须由用户亲手完成——ChatGPT 的项目是云端功能,没有公开 API,而用浏览器自动化去点它既需要接管登录态、又会因 UI 改版随时失效。不要尝试。
 
 然后**原样输出**给用户:
+
+**⚠️ 分叉**:如果第 5 步已经配了每晚 AI 整理,**删掉下面的 1️⃣ 整段**(两者互斥),改成一句:
+> **1️⃣ 每晚自动整理已配好** — 每晚 22:15 我会自动帮你归类表达、合并错误、重建闪卡、做数据体检,第二天早上给你简报。不想要了就跑:`launchctl unload ~/Library/LaunchAgents/com.speakingsystem.nightly.plist && rm ~/Library/LaunchAgents/com.speakingsystem.nightly.plist`
+
+否则用下面这段原文:
 
 > 安装完成 ✅。插件、配置、快捷键我都写好了,**剩下三件我做不了的事**(约 3 分钟):
 >
