@@ -1,0 +1,16 @@
+# 个人学习数据绝不进入公开仓库(这是模板仓库,不是某个人的学习记录)
+English-Speaking-System/02-Daily-Logs/*.md
+!English-Speaking-System/02-Daily-Logs/.gitkeep
+
+# 闪卡音频是本地可再生产物(macOS say 生成),不分发
+English-Speaking-System/07-Review/audio/
+
+# 自动整理脚本的运行状态,属个人进度
+English-Speaking-System/07-Review/整理状态.md
+
+# Obsidian 本地配置与缓存
+.obsidian/workspace*.json
+.obsidian/plugins/
+.trash/
+
+.DS_Store
