@@ -6,6 +6,22 @@
 > 实测记录:Claude(2026-08-12,全流程)与 Codex CLI 0.147(2026-08-12,全流程 1 分 33 秒,含全新库界面级验收)均已零卡点跑通本手册。
 > 如果你没有本地 shell 权限(例如你是网页版聊天 AI),请直接告诉用户:"我无法操作你的电脑,请改用 docs/安装指南.md 手动安装",不要假装执行。
 
+## 怎么把本手册交给你的 agent(用户看这段)
+**通用(任何有本地权限的 agent,推荐)**——打开 Codex / Claude Code / Cursor 的对话框,粘贴:
+```
+读取 https://raw.githubusercontent.com/Penny777btc/speaking-system/main/AGENT-SETUP.md 并严格照做,帮我完成安装
+```
+agent 会向你确认仓库路径并在每个动作前请求批准。
+
+**Codex CLI 无人值守版(实测 93 秒完成)**——装了 ChatGPT 桌面版就自带 CLI(不在 PATH 里,藏在应用包内):
+```
+/Applications/ChatGPT.app/Contents/Resources/codex exec -C "<你的仓库路径>" \
+  --approve-for-me --skip-git-repo-check \
+  -c 'sandbox_workspace_write.network_access=true' \
+  "读取 https://raw.githubusercontent.com/Penny777btc/speaking-system/main/AGENT-SETUP.md 并严格照做,帮我完成安装。仓库路径就是当前工作目录;不安装 Spaced Repetition;不要向我提问,按手册默认执行。"
+```
+三个坑:①`--approve-for-me` 与 `-s/--sandbox` 互斥,别同时给;②目标目录不是 git 仓库时必须加 `--skip-git-repo-check`;③联网靠 `-c 'sandbox_workspace_write.network_access=true'`,漏了会下载失败。
+
 ## 安全守则(最高优先级)
 1. **绝不覆盖用户已有内容**:目标位置已存在 `English-Speaking-System` 文件夹时,立即停止并询问用户。
 2. **改 JSON 配置一律「读取→合并→写回」**,禁止整文件覆盖——用户的 Obsidian 可能已有别的插件和快捷键。
