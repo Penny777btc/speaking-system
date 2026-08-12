@@ -3,7 +3,7 @@
 > **你是一个拥有本地 shell 权限的 AI agent**(Codex / Claude Code / Cursor Agent 等)。
 > 你的任务:替用户完成「口语学习系统」Obsidian 侧的全部安装与验收。
 > 照本文逐步执行,每步自检并向用户报告。全部完成后,用户只剩两个必须亲手做的动作(见第 6 步)。
-> 实测记录:Claude(2026-08-12,全流程)与 Codex CLI 0.147(2026-08-12,全流程 1 分 33 秒,含全新库界面级验收)均已零卡点跑通本手册。
+> 本手册已由 Claude 和 Codex CLI 各完整跑通一次(全新 Obsidian 库,含界面级验收),Codex 无人值守耗时约 90 秒。
 > 如果你没有本地 shell 权限(例如你是网页版聊天 AI),请直接告诉用户:"我无法操作你的电脑,请改用 docs/安装指南.md 手动安装",不要假装执行。
 
 ## 怎么把本手册交给你的 agent(用户看这段)
@@ -68,16 +68,22 @@ python3 - "$VAULT" <<'PY'
 import json, os, sys
 V = sys.argv[1]; ob = os.path.join(V, ".obsidian")
 os.makedirs(ob, exist_ok=True)
-def merge(path, patch):
+def merge(path, patch, must_take=()):
+    # must_take 里的键:原值为空/缺失时才写(用户已有非空的自定义值时停下来问,不要静默跳过)
     data = {}
     if os.path.exists(path):
         try: data = json.load(open(path))
         except Exception: data = {}
-    if isinstance(data, list):  # community-plugins.json 是数组
-        for x in patch:
-            if x not in data: data.append(x)
-    else:
-        for k, v in patch.items(): data.setdefault(k, v)
+    for k, v in patch.items():
+        cur = data.get(k)
+        if k in must_take:
+            if cur in (None, "", [], {}):
+                data[k] = v
+            elif cur != v:
+                print(f"⚠️ {path} 的 {k} 已是 {cur!r},与要写入的 {v!r} 冲突——请询问用户后再决定")
+        else:
+            data.setdefault(k, v)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     json.dump(data, open(path, "w"), ensure_ascii=False, indent=2)
     print("merged:", path)
 # 1) 启用插件(数组合并)
@@ -88,7 +94,8 @@ for x in ["templater-obsidian", "dataview"]:
 json.dump(cur, open(p, "w"), ensure_ascii=False, indent=2); print("merged:", p)
 # 2) Templater 模板目录
 merge(os.path.join(ob, "plugins/templater-obsidian/data.json"),
-      {"templates_folder": "English-Speaking-System/01-Templates"})
+      {"templates_folder": "English-Speaking-System/01-Templates"},
+      must_take=("templates_folder",))  # Templater 装过就会有这个键(默认空串),setdefault 会静默失效
 # 3) Dataview 开 JS
 merge(os.path.join(ob, "plugins/dataview/data.json"), {"enableDataviewJs": True})
 # 4) 一键归档快捷键(用户已占用该命令的绑定则保留原样)
@@ -96,7 +103,7 @@ merge(os.path.join(ob, "hotkeys.json"),
       {"templater-obsidian:create-new-note-from-template": [{"modifiers": ["Mod","Shift"], "key": "E"}]})
 PY
 ```
-✅ 自检:重新读取上述 4 个文件,确认目标键都在、且未丢失用户原有条目。
+✅ 自检:重新读取上述 4 个文件,确认 ①`community-plugins.json` 含两个插件 id ②`templates_folder` 的值**确实等于** `English-Speaking-System/01-Templates`(不是空串)③`enableDataviewJs` 为 true ④快捷键已写入 ⑤用户原有条目一个没丢。
 
 ## 第 4 步:重启 Obsidian(仅 macOS;其他系统请用户手动重启)
 配置是外部写入的,Obsidian 必须重启才会读取(运行中的 Obsidian 退出时可能用内存里的旧配置回写覆盖你刚写的文件——所以先退出、确认配置仍在、再启动):
@@ -122,7 +129,7 @@ python3 -c "
 import sys
 s = open(sys.argv[1]).read()
 print(s.split('\`\`\`')[1].strip())
-" "$VAULT/English-Speaking-System/00-Prompts/4-项目指令(完整版).md" | pbcopy && echo "指令已复制到剪贴板"
+" "$VAULT/English-Speaking-System/00-Prompts/4-项目指令.md" | pbcopy && echo "指令已复制到剪贴板"
 ```
 (pbcopy 失败就打印文件路径让用户自己复制代码块。)
 然后**原样输出**给用户:
@@ -130,7 +137,7 @@ print(s.split('\`\`\`')[1].strip())
 > 安装完成 ✅。只剩两步必须由你亲手完成:
 > 1. 打开 ChatGPT → 侧栏「项目」→ 新建项目(起名如「英语口语 B1→C1」)→ 项目页右上 ⋯ → **编辑指令** → 粘贴(指令已在你的剪贴板里;粘贴前可把开头的兴趣领域/水平参数改成你自己的)→ 保存
 > 2. 在项目里说 **「每日输入」**,开始你的第一课。遇到问题看 docs/常见问题.md。
-> 可选进阶:想让 Obsidian 每次打开时自动整理表达/错误库,去 Templater 设置里打开 **Enable startup templates** 开关(会弹风险确认,勾选后确认),并把 `English-Speaking-System/01-Templates/自动整理(无AI版).md` 加入 Startup templates 列表——这个开关存在设备本地,只能手动点,我无法替你完成。
+> **强烈建议再花 1 分钟**:想让 Obsidian 每次打开时自动整理表达/错误库并重建复习闪卡,去 Templater 设置里打开 **Enable startup templates** 开关(会弹风险确认,勾选后确认),并把 `English-Speaking-System/01-Templates/自动整理.md` 加入 Startup templates 列表——这个开关存在设备本地,只能手动点,我无法替你完成。
 
 ## 执行时的已知坑(来自 docs/维护知识库.md 的实战记录)
 - 外部改插件配置后必须重启 Obsidian;且要防它退出时用内存旧配置回写(第 4 步已含)。

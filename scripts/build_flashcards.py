@@ -85,15 +85,28 @@ tags:
 
 # 🔁 表达闪卡(自助复习)
 
-> 由夜间任务从 [[Expression Bank]] 自动生成,**不要手动编辑**——改动会在下次生成时被覆盖。
-> 想复习时:命令面板 → `Spaced Repetition: Review flashcards from all notes`。
+> 由 [[Expression Bank]] 自动生成,**不要手动编辑**——改动会在下次生成时被覆盖。
+> 想复习时:命令面板搜 `flashcards` → 「Spaced Repetition: Review flashcards from all notes」。
 > 这里是「偶尔想起来练一下」的补充。真正的产出式练习和反馈在每天的 ChatGPT 热身里——
 > 插件只能自评「记得/不记得」,判断不了你造的句子对不对。
 
 """
 
+EMPTY_HINT = """
+## 现在还是空的,这是正常的
+
+闪卡来自 `03-Expression-Bank/Expression Bank.md`(表达库)。练几天、让表达库攒下
+**带中文释义**的条目之后,这里就会自动长出卡片。
+
+条目格式:`- expression *(YYYY-MM-DD,中文意思)*` —— 没有中文释义的条目做不成卡片,
+因为卡片正面就是那个中文提示。
+
+> 复习方法:装 Spaced Repetition 插件 → 命令面板搜 `flashcards`。
+> 注意它只能自评「记得/不记得」;真正的产出式练习在每天 ChatGPT 热身的「表达重测」里。
+"""
+
 entry_re = re.compile(r"^- (?P<body>.+)$")
-# trailing *(2026-08-06,中文说明)* or *(2026-08-06)*
+# trailing *(YYYY-MM-DD,中文说明)* or *(YYYY-MM-DD)*
 # 不要求 meta 在行尾:条目末尾可能被追加使用记录(· 用过 ×2 · 上次 08-10 🎓),
 # 锚定行尾会让这些「真正用出来过的表达」反而进不了闪卡。
 meta_re = re.compile(r"\*\((?P<date>\d{4}-\d{2}-\d{2})(?P<extra>[^)]*)\)\*")
@@ -166,6 +179,13 @@ def main():
             no_cue.append((section, expr))
 
     kept = harvest_schedules(OUT)
+    if not cards and not no_cue:
+        # 表达库还是空的(新用户第一天):写引导文案而不是一个空文件,
+        # 否则用户会以为脚本坏了。
+        OUT.parent.mkdir(parents=True, exist_ok=True)
+        OUT.write_text(HEADER + EMPTY_HINT, encoding="utf-8")
+        print(f"cards=0(表达库还没有带中文释义的条目,已写入引导说明)-> {OUT}")
+        return 0
     lines = [HEADER, f"共 {len(cards)} 张卡片。\n"]
     cur = None
     audio_n = restored = 0
