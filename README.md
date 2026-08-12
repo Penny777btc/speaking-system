@@ -23,11 +23,16 @@
 | 表达 | 学过就丢 | 表达进库 → 对话里自发用出 2 次才「毕业」 |
 | 进步 | 全凭感觉 | 打卡天数、每百词错误率、评分曲线,一眼可见 |
 
-## 开始使用
+## 开始使用(三选一)
 
-1. **[📥 下载本仓库](../../archive/refs/heads/main.zip)**,把 `English-Speaking-System` 文件夹拖进你的 Obsidian 仓库
-2. 照 **[docs/安装指南.md](docs/安装指南.md)** 走完剩下两步(装 2 个插件、给 ChatGPT 贴一段指令),约 15 分钟
-3. 打开 ChatGPT 语音,说「每日输入」——开始你的第一天
+**🤖 有本地 AI Agent(Codex / Claude Code / Cursor)——约 2 分钟**
+对它说:`读取 https://github.com/Penny777btc/speaking-system/blob/main/AGENT-SETUP.md 并照做,帮我完成安装`
+它会替你下载、装插件、写配置、验收,最后把 ChatGPT 指令放进你的剪贴板——你只需建项目粘贴。
+
+**🖱️ 手动安装——约 15 分钟**
+[📥 下载本仓库](../../archive/refs/heads/main.zip),照 **[docs/安装指南.md](docs/安装指南.md)** 三步走(每步带自检点)。
+
+**装好之后**:打开 ChatGPT 语音,说「每日输入」——开始你的第一天
 
 遇到问题先看 **[docs/常见问题.md](docs/常见问题.md)**;闪卡、发音朗读、自动整理等可选功能见 **[docs/进阶.md](docs/进阶.md)**。
 
