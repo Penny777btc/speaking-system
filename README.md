@@ -29,12 +29,15 @@
 
 ## 开始使用(三选一)
 
-**🤖 有本地 AI Agent(Codex / Claude Code / Cursor)——约 2 分钟**
-对它说:`读取 https://github.com/Penny777btc/speaking-system/blob/main/AGENT-SETUP.md 并照做,帮我完成安装`
-它会替你下载、装插件、写配置、验收,最后把 ChatGPT 指令放进你的剪贴板——你只需建项目粘贴。
+**🤖 有本地 AI Agent(Codex / Claude Code / Cursor)——约 5 分钟**
+对它说:`读取 https://raw.githubusercontent.com/Penny777btc/speaking-system/main/AGENT-SETUP.md 并严格照做,帮我完成安装`
+它会下载文件、装插件、写配置,并按你的领域和水平把 ChatGPT 指令填好放进剪贴板。
+详细说明:**[docs/自动安装.md](docs/自动安装.md)**
 
 **🖱️ 手动安装——约 15 分钟**
 [📥 下载本仓库](https://github.com/Penny777btc/speaking-system/archive/refs/heads/main.zip),照 **[docs/安装指南.md](docs/安装指南.md)** 一步步做(每步带自检点)。
+
+> 两条路装出来的东西**完全一样**。无论走哪条,最后都要自己配一次 ChatGPT 项目(2 分钟,见 [docs/配置ChatGPT项目.md](docs/配置ChatGPT项目.md))——那是云端功能,没有工具能代劳。
 
 **装好之后**:打开 ChatGPT 语音,说「每日输入」——开始你的第一天
 
