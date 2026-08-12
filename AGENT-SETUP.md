@@ -132,6 +132,15 @@ print(s.split('\`\`\`')[1].strip())
 " "$VAULT/English-Speaking-System/00-Prompts/4-项目指令.md" | pbcopy && echo "指令已复制到剪贴板"
 ```
 (pbcopy 失败就打印文件路径让用户自己复制代码块。)
+
+再顺手把浏览器打开到 ChatGPT 的项目页,省掉用户找路的时间(失败就跳过,不要报错中断):
+```bash
+open "https://chatgpt.com/projects" 2>/dev/null \
+  || xdg-open "https://chatgpt.com/projects" 2>/dev/null \
+  || echo "请手动打开 https://chatgpt.com/projects"
+```
+> 注意:你**只能把页面打开给用户**。创建项目、粘贴指令、保存这三步必须由用户亲手完成——ChatGPT 的项目是云端功能,没有公开 API,而用浏览器自动化去点它既需要接管登录态、又会因 UI 改版随时失效。不要尝试。
+
 然后**原样输出**给用户:
 
 > 安装完成 ✅。插件、配置、快捷键我都写好了,**剩下三件我做不了的事**(约 3 分钟):
@@ -140,7 +149,7 @@ print(s.split('\`\`\`')[1].strip())
 > Obsidian 设置 → Templater → 滚到 **Startup templates** 区 → 打开 **Enable startup templates**(弹出风险框,勾选「I understand the risks」→ Enable)→ 下面的列表点 ➕ 填 `English-Speaking-System/01-Templates/自动整理.md` → 重启 Obsidian。
 > 开了之后:每次打开 Obsidian 会自动整理表达/错误库、重建复习闪卡。不开也能用,但这些要你手动做。
 >
-> **2️⃣ 配置 ChatGPT(2 分钟)** — 打开 ChatGPT → 侧栏「项目」→ 新建项目(起名如「英语口语 B1→C1」)→ 项目页右上 ⋯ → **编辑指令** → 粘贴(指令已在你的剪贴板里;粘贴前把开头的兴趣领域和水平参数改成你自己的)→ 保存。
+> **2️⃣ 配置 ChatGPT(2 分钟)** — 我已经帮你打开项目页了(没打开就去 chatgpt.com/projects)→ 新建项目(起名如「英语口语 B1→C1」)→ 项目页右上 ⋯ → **编辑指令** → 粘贴(指令已在你的剪贴板里;粘贴前把开头的兴趣领域和水平参数改成你自己的)→ 保存。
 >
 > **3️⃣ 开练** — 在项目里说 **「每日输入」**。遇到问题看 docs/常见问题.md。
 >
