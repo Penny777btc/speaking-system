@@ -15,5 +15,6 @@ English-Speaking-System/07-Review/整理状态.md
 
 .DS_Store
 
-# 各工作区的分工说明(本地,不入库)
+# 各工作区的本地流程文件(不入库)
 _SESSION.md
+并回主干.sh
