@@ -10,6 +10,10 @@ priority order: Chinese gloss > example sentence with the expression blanked.
 Entries with no usable cue are listed at the bottom as a plain read-through
 list rather than being turned into a card with a meaningless front.
 
+The example sentence, when there is one, goes on the *back*: the front stays a
+Chinese cue so the review is still productive, and the example only shows up
+after you have flipped.
+
 Usage: build_flashcards.py <vault-root-English-Speaking-System>
 """
 import re
@@ -41,6 +45,18 @@ def speakable(expr):
     return re.sub(r"\s+", " ", t).strip()
 
 
+def card_key(front, back):
+    """Identity of a card, independent of presentation.
+
+    Strips the audio embed and any example sentence, so that changing how a
+    card is *displayed* never orphans its review history. Keying on the raw
+    back text meant every format tweak silently reset every card to new.
+    """
+    b = re.sub(r"!\[\[[^\]]*\]\]", "", back)
+    b = b.split("<br>")[0]
+    return (front.strip(), b.strip())
+
+
 def harvest_schedules(path):
     """Map card-key -> SR comment line, from the previous deck."""
     keep = {}
@@ -52,9 +68,7 @@ def harvest_schedules(path):
             continue
         if i + 1 < len(lines) and SR_RE.match(lines[i + 1]):
             front, back = line.split("::", 1)
-            back = re.sub(r"!\[\[[^\]]*\]\]", "", back)
-            back = back.replace("#flashcards", "")
-            keep[(front.strip(), back.strip())] = lines[i + 1].rstrip()
+            keep[card_key(front, back.replace("#flashcards", ""))] = lines[i + 1].rstrip()
     return keep
 
 
@@ -86,7 +100,9 @@ tags:
 # 🔁 表达闪卡(自助复习)
 
 > 由 [[Expression Bank]] 自动生成,**不要手动编辑**——改动会在下次生成时被覆盖。
-> 想复习时:命令面板搜 `flashcards` → 「Spaced Repetition: Review flashcards from all notes」。
+> 复习需要 **Spaced Repetition** 插件(可选插件,没装就先装:设置 → 第三方插件 → 浏览 → 搜它;
+> 用默认设置,尤其别改卡组标签 `#flashcards`)。
+> 装好后:命令面板搜 `flashcards` → 「Spaced Repetition: Review flashcards from all notes」。
 > 这里是「偶尔想起来练一下」的补充。真正的产出式练习和反馈在每天的 ChatGPT 热身里——
 > 插件只能自评「记得/不记得」,判断不了你造的句子对不对。
 
@@ -124,6 +140,7 @@ def main():
     text = BANK.read_text(encoding="utf-8")
 
     cards, no_cue, section = [], [], ""
+    examples = {}
     seen = set()
     for line in text.splitlines():
         if line.startswith("###"):
@@ -173,8 +190,11 @@ def main():
             if blanked != example:
                 front = blanked
 
+        if example:
+            examples[expr] = example
         if front:
-            cards.append((section, front, expr))
+            # 正面若已是这句例句的挖空版,背面就别再原样重复一遍——答案会给两次
+            cards.append((section, front, expr, front != gloss))
         else:
             no_cue.append((section, expr))
 
@@ -189,7 +209,7 @@ def main():
     lines = [HEADER, f"共 {len(cards)} 张卡片。\n"]
     cur = None
     audio_n = restored = 0
-    for sec, front, back in cards:
+    for sec, front, back, front_is_cloze in cards:
         if sec != cur:
             lines.append(f"\n## {sec}\n")
             cur = sec
@@ -197,8 +217,12 @@ def main():
         if clip:
             audio_n += 1
         embed = f" ![[{clip}]]" if clip else ""
-        lines.append(f"{front}::{back}{embed} #flashcards")
-        sched = kept.get((front.strip(), back.strip()))
+        # 例句放背面:正面保持中文提示(逼你产出英文),翻面后才给用法示范。
+        # 放正面会泄题——例句里就含着答案。
+        ex = "" if front_is_cloze else examples.get(back, "")
+        tail = f"<br>*{ex}*" if ex else ""
+        lines.append(f"{front}::{back}{embed}{tail} #flashcards")
+        sched = kept.get(card_key(front, back))
         if sched:
             lines.append(sched)
             restored += 1
